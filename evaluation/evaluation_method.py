@@ -12,22 +12,12 @@ class EvaluationMethod:
     def _calculate_distances(self, data_dict: dict, vector_space_to_search, product_ids, evaluate_column: str):
         distances_df = pd.DataFrame(columns=[evaluate_column, 'product_uid', 'distance'])
 
-        # import itertools
-        # data_dict = dict(itertools.islice(data_dict.items(), 200))
-
         for value in tqdm(data_dict, desc='Evaluate the products of the queries'):
             ids, distances = vector_space_to_search.knnQuery(data_dict[value], k=20)
             # print(query)
             distances_df = distances_df.append(
                 pd.DataFrame([[value] + [x[1]] + [product_ids[x[0]]] for x in zip(ids, distances)],
                              columns=[evaluate_column, 'distance', 'product_uid']), ignore_index=True)
-
-            # for id, distance in zip(ids, distances):
-            #     # print('{:.2f} - {}: {}'.format(distance, product_ids[id], product_uids[product_ids[id]]))
-            #     distances_df = distances_df.append(pd.Series([value, product_ids[id], distance],
-            #                                                  index=['evaluation_value',
-            #                                                         'product_uid', 'distance']),
-            #                                        ignore_index=True)
 
         return distances_df
 
@@ -38,10 +28,8 @@ class EvaluationMethod:
                                               vector_space_to_search=vector_space_to_search,
                                               product_ids=product_ids,
                                               evaluate_column=evaluate_column)
-        # TODO: check why this is happening - why do we have duplicates?
-        distances.drop_duplicates(inplace=True)
 
-        evaluate = data.merge(distances, on=['product_uid', evaluate_column], how='inner')
+        evaluate = data.merge(distances, on=['product_uid', evaluate_column], how='left')
 
         overall_ndcg = 0
         for value in list(evaluate[evaluate_column].unique()):
@@ -53,4 +41,4 @@ class EvaluationMethod:
             overall_ndcg += ndcg_score
             print('{} - NDCG = {:.2f}'.format(value, ndcg_score))
 
-        print('Overall NDCG is {:.2f}'.format(overall_ndcg / len(list(evaluate[evaluate_column].unique()))))
+        print('Overall NDCG is {:.2f}'.format(overall_ndcg / evaluate[evaluate_column].nunique()))
