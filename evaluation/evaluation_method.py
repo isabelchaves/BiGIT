@@ -1,12 +1,10 @@
 import pandas as pd
 from tqdm import tqdm
 
-from evaluation.ndcg_calculation import NDCG
+from evaluation.metrics import Metrics
 
 
 class EvaluationMethod:
-    def __init__(self):
-        self.ndcg = NDCG()
 
     # TODO: Improve performance here
     def _calculate_distances(self, data_dict: dict, vector_space_to_search, product_ids, evaluate_column: str):
@@ -32,13 +30,15 @@ class EvaluationMethod:
         evaluate = data.merge(distances, on=['product_uid', evaluate_column], how='left')
 
         overall_ndcg = 0
+        overall_map = 0
+        overall_mrr = 0
         for value in list(evaluate[evaluate_column].unique()):
             products_to_evaluate = evaluate[evaluate[evaluate_column] == value]
-            pred_sorted = products_to_evaluate.sort_values(by='distance')['relevance'].values
-            ndcg_score = self.ndcg.ndcg_at_k(r=pred_sorted,
-                                             k=pred_sorted.shape[0])
-            # method=1)
-            overall_ndcg += ndcg_score
-            print('{} - NDCG = {:.2f}'.format(value, ndcg_score))
+            metrics = Metrics(data=products_to_evaluate)
+            overall_ndcg += metrics.ndcg
+            overall_map = metrics.map
+            # overall_mrr = metrics.mrr
 
         print('Overall NDCG is {:.2f}'.format(overall_ndcg / evaluate[evaluate_column].nunique()))
+        print('Overall MAP is {:.2f}'.format(overall_map / evaluate[evaluate_column].nunique()))
+        # print('Overall MRR is {:.2f}'.format(overall_mrr / evaluate[evaluate_column].nunique()))
