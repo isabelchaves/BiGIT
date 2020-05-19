@@ -7,13 +7,18 @@ from word_representations.tf_idf_implementation import TfIdfImplementation
 
 
 class TfIfdExperiments:
-    def __init__(self, vector_space: str, vector_method: str):
+    def __init__(self, vector_space: str, vector_method: str, product_ids: dict):
         self.vector_space = vector_space
         self.vector_method = vector_method
+        self.model = None
+        self.product_ids = product_ids
+        self.evaluation = EvaluationMethod(product_ids=product_ids)
 
     def _prepare_data(self, data):
-        corpus = data['product_title_processed'].values.tolist() + data['search_term_processed'].values.tolist()
-        self.model = TfIdfImplementation(corpus=corpus).model
+        if not self.model:
+            corpus = data['product_title_processed'].values.tolist() + data['search_term_processed'].values.tolist()
+            self.model = TfIdfImplementation(corpus=corpus).model
+
         product_title_vectors = self.model.transform(data['product_title_processed'])
         search_term_vectors = self.model.transform(data['search_term_processed'])
 
@@ -42,10 +47,10 @@ class TfIfdExperiments:
         # Building Query vector space
         query_vs = build_vector_space(data=queries, vector_method=self.vector_method, vector_space=self.vector_space)
 
-        EvaluationMethod().run(data=data,
-                               data_to_evaluate=queries,
-                               vector_space_to_search=product_vs,
-                               evaluate_column='search_term_processed')
+        self.evaluation.run(data=data,
+                            data_to_evaluate=queries,
+                            vector_space_to_search=product_vs,
+                            evaluate_column='search_term_processed')
 
         return product_vs, query_vs
 
@@ -73,10 +78,10 @@ class TfIfdExperiments:
 
         print('QUERIES ANALYSIS')
 
-        EvaluationMethod().run(data=data,
-                               data_to_evaluate=queries,
-                               vector_space_to_search=product_vs,
-                               evaluate_column='search_term_processed')
+        self.evaluation.run(data=data,
+                            data_to_evaluate=queries,
+                            vector_space_to_search=product_vs,
+                            evaluate_column='search_term_processed')
 
         # print('PRODUCTS ANALYSIS')
         #
