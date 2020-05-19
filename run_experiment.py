@@ -6,6 +6,7 @@ from configs.experiment_config import ExperimentConfig
 from data.processing.feature_engineering import FeatureEngineering
 from data.processing.textual_processing import PreProcessing
 from experiments.tf_idf_experiments import TfIfdExperiments
+from run_predictions import run_predictions
 from word_representations.word2vec import Word2VecExperiments
 
 
@@ -25,23 +26,34 @@ class RunExperiment:
         language_process = PreProcessing(language=self.language)
         data['search_term_processed'] = data['search_term'].apply(lambda x: language_process.tokenizer(x))
         data['product_title_processed'] = data['product_title'].apply(lambda x: language_process.tokenizer(x))
+        product_ids = dict(enumerate(data.product_uid.unique()))
 
+        # TF-IDF #
         tfidf = TfIfdExperiments(vector_space=self.vector_space,
-                                 vector_method=self.vector_method)
+                                 vector_method=self.vector_method,
+                                 product_ids=product_ids)
 
-        # baseline_product_vs, baseline_query_vs = tfidf.run_baseline(data=data)
+        baseline_product_vs, _ = tfidf.run_baseline(data=data)
 
-        clickgraph_product_vs, clickgraph_query_vs = \
+        run_predictions(model_class=tfidf, product_vector_space=baseline_product_vs, product_ids=product_ids)
+
+        clickgraph_product_vs, _ = \
             tfidf.run_with_click_graph(data=data, click_graph_interaction_number=self.click_graph_interaction_number)
 
+        run_predictions(model_class=tfidf, product_vector_space=clickgraph_product_vs)
+
+        # Word2vec #
         word2vec = Word2VecExperiments(word_vectors_strategy=self.word_vectors_strategy,
                                        vector_method=self.vector_method,
-                                       vector_space=self.vector_space)
+                                       vector_space=self.vector_space,
+                                       product_ids=product_ids)
 
-        # baseline_product_vs, baseline_query_vs = word2vec.run_baseline(data=data)
+        baseline_product_vs, _ = word2vec.run_baseline(data=data)
+        run_predictions(model_class=word2vec, product_vector_space=baseline_product_vs, product_ids=product_ids)
 
-        # clickgraph_product_vs, clickgraph_query_vs = \
-        #    word2vec.run_with_click_graph(data=data, click_graph_interaction_number=self.click_graph_interaction_number)
+        clickgraph_product_vs, _ = \
+            word2vec.run_with_click_graph(data=data, click_graph_interaction_number=self.click_graph_interaction_number)
+        run_predictions(model_class=word2vec, product_vector_space=clickgraph_product_vs, product_ids=product_ids)
 
         print(data.head())
 
