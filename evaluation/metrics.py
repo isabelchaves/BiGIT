@@ -60,7 +60,9 @@ class Metrics:
 
     def _get_mean_average_precision(self) -> float:
         # TODO: revisit this method
-        pred_sorted = self.data.sort_values(by='distance')['relevance'].values
+        pred_sorted = self.data.sort_values(by='relevance')
+        pred_sorted['relevance'] = [int(row >= 2.5) for row in pred_sorted['relevance']]
+        pred_sorted['distance'].fillna(0, inplace=True)
         map_score = average_precision_score(pred_sorted['relevance'], pred_sorted['distance'], average='weighted')
 
         return map_score
