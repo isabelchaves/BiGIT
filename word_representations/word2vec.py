@@ -8,11 +8,12 @@ from evaluation.evaluation_method import EvaluationMethod
 
 
 class Word2VecExperiments:
-    def __init__(self, word_vectors_strategy: str, vector_method: str, vector_space: str):
+    def __init__(self, word_vectors_strategy: str, vector_method: str, vector_space: str, product_ids: dict):
         self.word_vectors_strategy = word_vectors_strategy
         self.vector_method = vector_method
         self.vector_space = vector_space
         self.model = api.load('word2vec-google-news-300')
+        self.evaluation = EvaluationMethod(product_ids=product_ids)
 
     def _calculate_word_vectors(self, word_vectors, list_of_words, strategy):
         """
@@ -78,10 +79,10 @@ class Word2VecExperiments:
         # Building Query vector space
         query_vs = build_vector_space(data=queries, vector_method=self.vector_method, vector_space=self.vector_space)
 
-        EvaluationMethod().run(data=data,
-                               data_to_evaluate=queries,
-                               vector_space_to_search=product_vs,
-                               evaluate_column='search_term_processed')
+        self.evaluation.run(data=data,
+                            data_to_evaluate=queries,
+                            vector_space_to_search=product_vs,
+                            evaluate_column='search_term_processed')
 
         return product_vs, query_vs
 
@@ -109,10 +110,10 @@ class Word2VecExperiments:
 
         print('QUERIES ANALYSIS')
 
-        EvaluationMethod().run(data=data,
-                               data_to_evaluate=queries,
-                               vector_space_to_search=product_vs,
-                               evaluate_column='search_term_processed')
+        self.evaluation.run(data=data,
+                            data_to_evaluate=queries,
+                            vector_space_to_search=product_vs,
+                            evaluate_column='search_term_processed')
 
         # print('PRODUCTS ANALYSIS')
         #
@@ -122,4 +123,3 @@ class Word2VecExperiments:
         #                        evaluate_column='product_title_processed')
 
         return product_vs, query_vs
-
