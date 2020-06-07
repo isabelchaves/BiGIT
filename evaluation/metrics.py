@@ -2,6 +2,7 @@ from typing import Tuple
 
 import numpy as np
 import pandas as pd
+import ml_metrics as metrics
 from scipy.spatial import distance
 from sklearn.metrics import average_precision_score
 
@@ -16,7 +17,7 @@ class Metrics:
     def __init__(self, data: pd.DataFrame):
         self.data = data
         self.ndcg = self._get_ndcg()
-        self.map = self._get_mean_average_precision()
+        self.ap = self._get_average_precision()
         # self.mrr = self._get_mean_reciprocal_rank()
 
     # def _get_mean_reciprocal_rank(self, X, Y, indices, metric='hamming') -> Tuple[float, float]:
@@ -58,11 +59,10 @@ class Metrics:
                                       k=pred_sorted.shape[0])
         return ndcg_score
 
-    def _get_mean_average_precision(self) -> float:
-        # TODO: revisit this method
-        pred_sorted = self.data.sort_values(by='relevance')
-        pred_sorted['relevance'] = [int(row >= 2.5) for row in pred_sorted['relevance']]
-        pred_sorted['distance'].fillna(0, inplace=True)
-        map_score = average_precision_score(pred_sorted['relevance'], pred_sorted['distance'], average='weighted')
+    def _get_average_precision(self) -> float:
+        pred_sorted = self.data.sort_values(by='distance')['distance'].values
+        true_sorted = self.data.sort_values(by='relevance')['relevance'].values
 
-        return map_score
+        ap_score = average_precision_score(pred_sorted, true_sorted)
+
+        return ap_score

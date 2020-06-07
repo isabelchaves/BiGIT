@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
@@ -30,16 +31,16 @@ class EvaluationMethod:
         evaluate = data.merge(distances, on=['product_uid', evaluate_column], how='left')
 
         overall_ndcg = 0
-        overall_map = 0
+        overall_ap = []
         overall_mrr = 0
 
         for value in list(evaluate[evaluate_column].unique()):
             products_to_evaluate = evaluate[evaluate[evaluate_column] == value]
             metrics = Metrics(data=products_to_evaluate)
             overall_ndcg += metrics.ndcg
-            overall_map = metrics.map
+            overall_ap = overall_ap.append(metrics.ap)
             # overall_mrr = metrics.mrr
 
         print('Overall NDCG is {:.2f}'.format(overall_ndcg / evaluate[evaluate_column].nunique()))
-        print('Overall MAP is {:.2f}'.format(overall_map / evaluate[evaluate_column].nunique()))
+        print('Overall MAP is {:.2f}'.format(np.mean(overall_ap)))
         # print('Overall MRR is {:.2f}'.format(overall_mrr / evaluate[evaluate_column].nunique()))
