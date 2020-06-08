@@ -32,15 +32,15 @@ class EvaluationMethod:
 
         overall_ndcg = 0
         overall_ap = []
-        overall_mrr = 0
+        overall_mrr = []
 
         for value in list(evaluate[evaluate_column].unique()):
             products_to_evaluate = evaluate[evaluate[evaluate_column] == value]
             metrics = Metrics(data=products_to_evaluate)
             overall_ndcg += metrics.ndcg
-            overall_ap = overall_ap.append(metrics.ap)
-            # overall_mrr = metrics.mrr
+            overall_ap.append(metrics.ap)
+            overall_mrr.append(metrics.mrr)
 
         print('Overall NDCG is {:.2f}'.format(overall_ndcg / evaluate[evaluate_column].nunique()))
-        print('Overall MAP is {:.2f}'.format(np.mean(overall_ap)))
-        # print('Overall MRR is {:.2f}'.format(overall_mrr / evaluate[evaluate_column].nunique()))
+        print('Overall MAP is {:.2f}'.format(np.nanmean(overall_ap)))
+        print('Overall MRR is {:.2f}'.format(np.nanmean(overall_mrr)))
