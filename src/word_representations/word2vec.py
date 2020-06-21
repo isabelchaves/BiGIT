@@ -2,9 +2,9 @@ import gensim.downloader as api
 import numpy as np
 import pandas as pd
 
-from src.click_graph import ClickGraphModel
+from src.click_graph.click_graph_model import ClickGraphModel
 from src.data.processing.build_vector_spaces import build_vector_space
-from src.evaluation import EvaluationMethod
+from src.evaluation.evaluation_method import EvaluationMethod
 
 
 class Word2VecExperiments:
@@ -15,7 +15,7 @@ class Word2VecExperiments:
         self.model = api.load('word2vec-google-news-300')
         self.evaluation = EvaluationMethod(product_ids=product_ids)
 
-    def _calculate_word_vectors(self, word_vectors, list_of_words, strategy):
+    def _calculate_word_vectors(self, word_vectors, list_of_words):
         """
         https://stackoverflow.com/questions/46889727/word2vec-what-is-best-add-concatenate-or-average-word-vectors
         """
@@ -33,10 +33,10 @@ class Word2VecExperiments:
                     vectors.append(nans_vector)
             pass
 
-        if strategy == 'sum':
+        if self.word_vectors_strategy == 'sum':
             return np.nansum([vectors], axis=1).flatten()
 
-        elif strategy == 'average':
+        elif self.word_vectors_strategy == 'average':
             return np.nanmean([vectors], axis=1).flatten()
 
         else:
@@ -47,12 +47,10 @@ class Word2VecExperiments:
 
         product_title_vectors = data['product_title_processed'].apply(
             lambda x: self._calculate_word_vectors(word_vectors=self.model,
-                                                   list_of_words=x,
-                                                   strategy=self.word_vectors_strategy))
+                                                   list_of_words=x))
         search_term_vectors = data['search_term_processed'].apply(
             lambda x: self._calculate_word_vectors(word_vectors=self.model,
-                                                   list_of_words=x,
-                                                   strategy=self.word_vectors_strategy))
+                                                   list_of_words=x))
 
         products = dict()
         queries = dict()

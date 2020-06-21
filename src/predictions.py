@@ -1,8 +1,8 @@
 import pandas as pd
 
 from src.configs.experiment_config import ExperimentConfig
-from src.data import PreProcessing
-from src.evaluation import EvaluationMethod
+from src.data.processing.textual_processing import PreProcessing
+from src.evaluation.evaluation_method import EvaluationMethod
 
 
 def run_predictions(model_class, product_vector_space, product_ids):
