@@ -1,9 +1,9 @@
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from src.click_graph import ClickGraphModel
+from src.click_graph.click_graph_model import ClickGraphModel
 from src.data.processing.build_vector_spaces import build_vector_space
-from src.evaluation import EvaluationMethod
+from src.evaluation.evaluation_method import EvaluationMethod
 
 
 class TfIfdExperiments:

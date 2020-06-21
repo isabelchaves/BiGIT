@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
-from src.evaluation import NDCG
+from src.evaluation.ndcg_calculation import NDCG
 
 
 class Metrics:
