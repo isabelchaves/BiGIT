@@ -38,7 +38,7 @@ class Metrics:
         Returns:
             Mean reciprocal rank
         """
-        pred = self.data.fillna(0).sort_values(by='relevance', ascending=False)['distance'].values
+        pred = self.data.sort_values(by='distance', ascending=False)['relevance'].values
         pred = MinMaxScaler(feature_range=(0, 1)).fit_transform(pred.reshape(-1, 1)).reshape(1, -1)
         rs = (np.asarray(r).nonzero()[0] for r in pred)
         return np.mean([1. / (r[0] + 1) if r.size else 0. for r in rs])
@@ -50,8 +50,38 @@ class Metrics:
         return ndcg_score
 
     def _get_average_precision(self) -> float:
-        pred_sorted = self.data.fillna(0).sort_values(by='distance', ascending=False)['distance'].values
-        true_sorted = self.data.sort_values(by='relevance', ascending=False)['relevance'].values
-        true_sorted = [1 if x > 2.5 else 0 for x in true_sorted]
 
-        return average_precision_score(true_sorted, pred_sorted)
+        """
+        Adapted from https://github.com/benhamner/Metrics/blob/master/Python/ml_metrics/average_precision.py
+
+        Computes the average precision at k.
+        This function computes the average prescision at k between two lists of items.
+
+        Variables needed:
+        -----------------
+        actual : list
+                 A list of elements that are to be predicted (order doesn't matter)
+        predicted : list
+                    A list of predicted elements (order does matter)
+        k : int, optional
+            The maximum number of predicted elements
+        Returns
+        --------------
+        score : double
+                The average precision at k (size of actual list) over the input lists
+        """
+        predicted = self.data.sort_values(by='distance', ascending=False)['distance'].values
+        actual = self.data.sort_values(by='relevance', ascending=False)['relevance'].values
+
+        score = 0.0
+        num_hits = 0.0
+
+        for i, p in enumerate(predicted):
+            if p in actual and p not in predicted[:i]:
+                num_hits += 1.0
+                score += num_hits / (i + 1.0)
+
+        if not actual:
+            return 0.0
+
+        return score / len(actual)
