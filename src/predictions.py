@@ -1,12 +1,12 @@
 import pandas as pd
 
-from configs.experiment_config import ExperimentConfig
-from data.processing.textual_processing import PreProcessing
-from evaluation.evaluation_method import EvaluationMethod
+from src.configs.experiment_config import ExperimentConfig
+from src.data import PreProcessing
+from src.evaluation import EvaluationMethod
 
 
 def run_predictions(model_class, product_vector_space, product_ids):
-    data_to_predict = pd.read_csv(ExperimentConfig.data_path + 'test_set.csv', encoding='latin-1', index_col=0)
+    data_to_predict = pd.read_csv(ExperimentConfig.data_path + 'test_set_new.csv', encoding='latin-1', index_col=0)
     language_process = PreProcessing(language=ExperimentConfig.language)
     data_to_predict['search_term_processed'] = data_to_predict['search_term'].apply(
         lambda x: language_process.tokenizer(x))

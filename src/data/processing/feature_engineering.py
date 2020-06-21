@@ -10,10 +10,10 @@ class FeatureEngineering:
         self.min_clicks = 10
 
     def _create_click_score(self, data):
-        max_relevance = max(list(data.relevance.unique()))
+        relevance_threshold = data.relevance.mean()
 
         data['clicks'] = data['relevance'].apply(
-            lambda x: randint(self.min_clicks, self.max_clicks) if x == max_relevance else randint(0, self.min_clicks))
+            lambda x: randint(self.min_clicks*2, self.max_clicks) * x if x >= relevance_threshold else randint(0, self.min_clicks) * x)
 
         data['click_score'] = MinMaxScaler(feature_range=(0, 1)).fit_transform(data.relevance.values.reshape(-1, 1))
 

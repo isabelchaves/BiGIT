@@ -1,68 +1,41 @@
-import gensim.downloader as api
-import numpy as np
 import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
 
-from click_graph.click_graph_model import ClickGraphModel
-from data.processing.build_vector_spaces import build_vector_space
-from evaluation.evaluation_method import EvaluationMethod
+from src.click_graph import ClickGraphModel
+from src.data.processing.build_vector_spaces import build_vector_space
+from src.evaluation import EvaluationMethod
 
 
-class Word2VecExperiments:
-    def __init__(self, word_vectors_strategy: str, vector_method: str, vector_space: str, product_ids: dict):
-        self.word_vectors_strategy = word_vectors_strategy
-        self.vector_method = vector_method
+class TfIfdExperiments:
+    def __init__(self, vector_space: str, vector_method: str, product_ids: dict):
         self.vector_space = vector_space
-        self.model = api.load('word2vec-google-news-300')
+        self.vector_method = vector_method
+        self.model = None
+        self.product_ids = product_ids
         self.evaluation = EvaluationMethod(product_ids=product_ids)
 
-    def _calculate_word_vectors(self, word_vectors, list_of_words, strategy):
-        """
-        https://stackoverflow.com/questions/46889727/word2vec-what-is-best-add-concatenate-or-average-word-vectors
-        """
-        vectors = []
-
-        for word in list_of_words:
-            if len(word) > 0:
-                try:
-                    vector = word_vectors[word]
-                    vector.astype(np.float16)
-                    vectors.append(vector)
-
-                except KeyError:
-                    nans_vector = np.zeros(300, dtype=int) + np.nan
-                    vectors.append(nans_vector)
-            pass
-
-        if strategy == 'sum':
-            return np.nansum([vectors], axis=1).flatten()
-
-        elif strategy == 'average':
-            return np.nanmean([vectors], axis=1).flatten()
-
-        else:
-            # return np.array([vectors])
-            raise ValueError('strategy must be either \'sum\' or \'average\'')
+    def tf_idf_train(self, corpus):
+        corpus = list(dict.fromkeys(corpus))
+        model = TfidfVectorizer(stop_words='english').fit(corpus)
+        return model
 
     def _prepare_data(self, data):
+        if not self.model:
+            corpus = data['product_title_processed'].values.tolist() + data['search_term_processed'].values.tolist()
+            self.model = self.tf_idf_train(corpus=corpus)
 
-        product_title_vectors = data['product_title_processed'].apply(
-            lambda x: self._calculate_word_vectors(word_vectors=self.model,
-                                                   list_of_words=x,
-                                                   strategy=self.word_vectors_strategy))
-        search_term_vectors = data['search_term_processed'].apply(
-            lambda x: self._calculate_word_vectors(word_vectors=self.model,
-                                                   list_of_words=x,
-                                                   strategy=self.word_vectors_strategy))
+        product_title_vectors = self.model.transform(data['product_title_processed'])
+        search_term_vectors = self.model.transform(data['search_term_processed'])
 
         products = dict()
         queries = dict()
 
         for i, row in data.iterrows():
             if row['product_uid'] not in products:
-                products[row['product_uid']] = product_title_vectors[i]
+                products[row['product_uid']] = product_title_vectors[i].todense()
 
             if row['search_term_processed'] not in queries:
-                queries[row['search_term_processed']] = search_term_vectors[i]
+                queries[row['search_term_processed']] = search_term_vectors[i].todense()
 
         return products, queries
 
@@ -94,7 +67,7 @@ class Word2VecExperiments:
 
         products, queries = self._prepare_data(data=data)
 
-        click_graph = ClickGraphModel(dimensions=self.model.vector_size,
+        click_graph = ClickGraphModel(dimensions=len(self.model.vocabulary_),
                                       data=data)
 
         queries, products = click_graph.run(products=products,

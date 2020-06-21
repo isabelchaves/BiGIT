@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from evaluation.metrics import Metrics
+from src.evaluation.metrics import Metrics
 
 
 class EvaluationMethod:
