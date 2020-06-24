@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
 
 from src.evaluation.ndcg_calculation import NDCG
 
@@ -37,13 +36,13 @@ class Metrics:
         Returns:
             Mean reciprocal rank
         """
-        pred = self.data.sort_values(by='distance', ascending=False)['relevance'].values
-        pred = MinMaxScaler(feature_range=(0, 1)).fit_transform(pred.reshape(-1, 1)).reshape(1, -1)
+        pred = self.data.dropna().sort_values(by='distance', ascending=False)['relevance'].values
+        pred = [1 if x == 3 else 0 for x in pred]
         rs = (np.asarray(r).nonzero()[0] for r in pred)
         return np.mean([1. / (r[0] + 1) if r.size else 0. for r in rs])
 
     def _get_ndcg(self) -> float:
-        pred_sorted = self.data.sort_values(by='distance', ascending=False)['relevance'].values
+        pred_sorted = self.data.dropna().sort_values(by='distance', ascending=False)['relevance'].values
         ndcg_score = NDCG().ndcg_at_k(r=pred_sorted,
                                       k=pred_sorted.shape[0])
         return ndcg_score
@@ -69,8 +68,8 @@ class Metrics:
         score : double
                 The average precision at k (size of actual list) over the input lists
         """
-        predicted = self.data.sort_values(by='distance', ascending=False)['distance'].values
-        actual = self.data.sort_values(by='relevance', ascending=False)['relevance'].values
+        predicted = self.data.dropna()['product_uid'].values
+        actual = self.data.sort_values(by='relevance', ascending=False)['product_uid'].values
 
         score = 0.0
         num_hits = 0.0
@@ -79,8 +78,5 @@ class Metrics:
             if p in actual and p not in predicted[:i]:
                 num_hits += 1.0
                 score += num_hits / (i + 1.0)
-
-        if not actual:
-            return 0.0
 
         return score / len(actual)
