@@ -1,7 +1,9 @@
+import networkx as nx
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-import networkx as nx
+
+from src.configs.variables_const import VariablesConsts
 
 
 class ClickGraphModel:
@@ -11,10 +13,11 @@ class ClickGraphModel:
 
     def _create_graph(self, data: pd.DataFrame):
         G = nx.Graph()
-        G.add_nodes_from(data.product_uid.unique(), bipartite=0)
+        G.add_nodes_from(data[VariablesConsts.PRODUCT_ID].unique(), bipartite=0)
         G.add_nodes_from(data.search_term_processed.unique(), bipartite=1)
         G.add_weighted_edges_from(
-            list(data[['product_uid', 'search_term_processed', 'click_score']].to_records(index=False)))
+            list(data[[VariablesConsts.PRODUCT_ID, VariablesConsts.SEARCH_TERM_PROCESSED,
+                       VariablesConsts.CLICK_SCORE]].to_records(index=False)))
         return G
 
     def __transfer_queries_to_products(self, products: np.array, queries: np.array):
