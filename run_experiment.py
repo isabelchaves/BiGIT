@@ -1,12 +1,15 @@
 import warnings
+from copy import deepcopy
 from typing import Dict
 
 import pandas as pd
 
 from src.configs.experiment_config import ExperimentConfig
+from src.configs.variables_const import VariablesConsts
 from src.data.processing.feature_engineering import FeatureEngineering
 from src.data.processing.textual_processing import PreProcessing
 from src.predictions import run_predictions
+from src.word_representations.bert import BertExperiments
 from src.word_representations.tf_idf import TfIfdExperiments
 from src.word_representations.word2vec import Word2VecExperiments
 
@@ -24,24 +27,26 @@ class RunExperiment:
         self.click_graph_interaction_number = click_graph_interaction_number
 
     def run(self):
-        data = pd.read_csv(self.data_path + 'train.csv', encoding='latin-1')
+        data = pd.read_parquet(self.data_path + 'train_set.parquet')
         data = FeatureEngineering().run(data=data)
         language_process = PreProcessing(language=self.language)
-        data['search_term_processed'] = data['search_term'].apply(lambda x: language_process.tokenizer(x))
-        data['product_title_processed'] = data['product_title'].apply(lambda x: language_process.tokenizer(x))
-        product_ids = dict(enumerate(data.product_uid.unique()))
+        data[VariablesConsts.SEARCH_TERM_PROCESSED] = data[VariablesConsts.SEARCH_TERM].apply(
+            lambda x: language_process.tokenizer(x))
+        data[VariablesConsts.PRODUCT_TITLE_PROCESSED] = data[VariablesConsts.PRODUCT_TITLE].apply(
+            lambda x: language_process.tokenizer(x))
+        product_ids = dict(enumerate(data[VariablesConsts.PRODUCT_ID].unique()))
 
         # TF-IDF #
         tfidf = TfIfdExperiments(vector_space=self.vector_space,
                                  vector_method=self.vector_method,
                                  product_ids=product_ids)
 
-        tfidf_product_vs, _ = tfidf.run_baseline(data=data)
+        tfidf_product_vs, _ = tfidf.run_baseline(data=deepcopy(data))
 
         run_predictions(model_class=tfidf, product_vector_space=tfidf_product_vs, product_ids=product_ids)
 
         tfidf_clickgraph_product_vs, _ = \
-            tfidf.run_with_click_graph(data=data, click_graph_interaction_number=self.click_graph_interaction_number)
+            tfidf.run_with_click_graph(data=deepcopy(data), click_graph_interaction_number=self.click_graph_interaction_number)
 
         run_predictions(model_class=tfidf, product_vector_space=tfidf_clickgraph_product_vs, product_ids=product_ids)
 
@@ -51,12 +56,34 @@ class RunExperiment:
                                        vector_space=self.vector_space,
                                        product_ids=product_ids)
 
-        word2vec_product_vs, _ = word2vec.run_baseline(data=data)
-        run_predictions(model_class=word2vec, product_vector_space=word2vec_product_vs, product_ids=product_ids)
+        word2vec_product_vs, _ = word2vec.run_baseline(data=deepcopy(data))
+        run_predictions(model_class=deepcopy(word2vec),
+                        product_vector_space=word2vec_product_vs,
+                        product_ids=deepcopy(product_ids))
 
         word2vec_clickgraph_product_vs, _ = \
-            word2vec.run_with_click_graph(data=data, click_graph_interaction_number=self.click_graph_interaction_number)
-        run_predictions(model_class=word2vec, product_vector_space=word2vec_clickgraph_product_vs,
+            word2vec.run_with_click_graph(data=deepcopy(data),
+                                          click_graph_interaction_number=self.click_graph_interaction_number)
+        run_predictions(model_class=deepcopy(word2vec),
+                        product_vector_space=word2vec_clickgraph_product_vs,
+                        product_ids=product_ids)
+
+        # BERT #
+        bert = BertExperiments(word_vectors_strategy=self.word_vectors_strategy,
+                               vector_method=self.vector_method,
+                               vector_space=self.vector_space,
+                               product_ids=product_ids)
+
+        bert_product_vs, _ = bert.run_baseline(data=deepcopy(data))
+        run_predictions(model_class=deepcopy(bert),
+                        product_vector_space=bert_product_vs,
+                        product_ids=deepcopy(product_ids))
+
+        bert_clickgraph_product_vs, _ = \
+            bert.run_with_click_graph(data=deepcopy(data),
+                                      click_graph_interaction_number=self.click_graph_interaction_number)
+        run_predictions(model_class=deepcopy(bert),
+                        product_vector_space=bert_clickgraph_product_vs,
                         product_ids=product_ids)
 
         print(data.head())
