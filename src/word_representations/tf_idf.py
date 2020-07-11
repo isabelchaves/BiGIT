@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 from src.click_graph.click_graph_model import ClickGraphModel
+from src.configs.variables_const import VariablesConsts
 from src.data.processing.build_vector_spaces import build_vector_space
 from src.evaluation.evaluation_method import EvaluationMethod
 
@@ -14,28 +15,29 @@ class TfIfdExperiments:
         self.product_ids = product_ids
         self.evaluation = EvaluationMethod(product_ids=product_ids)
 
-    def tf_idf_train(self, corpus):
+    def _tf_idf_train(self, corpus):
         corpus = list(dict.fromkeys(corpus))
         model = TfidfVectorizer(stop_words='english').fit(corpus)
         return model
 
-    def _prepare_data(self, data):
+    def prepare_data(self, data):
         if not self.model:
-            corpus = data['product_title_processed'].values.tolist() + data['search_term_processed'].values.tolist()
-            self.model = self.tf_idf_train(corpus=corpus)
+            corpus = data[VariablesConsts.PRODUCT_TITLE_PROCESSED].values.tolist() + data[
+                VariablesConsts.SEARCH_TERM_PROCESSED].values.tolist()
+            self.model = self._tf_idf_train(corpus=corpus)
 
-        product_title_vectors = self.model.transform(data['product_title_processed'])
-        search_term_vectors = self.model.transform(data['search_term_processed'])
+        product_title_vectors = self.model.transform(data[VariablesConsts.PRODUCT_TITLE_PROCESSED])
+        search_term_vectors = self.model.transform(data[VariablesConsts.SEARCH_TERM_PROCESSED])
 
         products = dict()
         queries = dict()
 
         for i, row in data.iterrows():
-            if row['product_uid'] not in products:
-                products[row['product_uid']] = product_title_vectors[i].todense()
+            if row[VariablesConsts.PRODUCT_ID] not in products:
+                products[row[VariablesConsts.PRODUCT_ID]] = product_title_vectors[i].todense()
 
-            if row['search_term_processed'] not in queries:
-                queries[row['search_term_processed']] = search_term_vectors[i].todense()
+            if row[VariablesConsts.SEARCH_TERM_PROCESSED] not in queries:
+                queries[row[VariablesConsts.SEARCH_TERM_PROCESSED]] = search_term_vectors[i].todense()
 
         return products, queries
 
@@ -44,7 +46,7 @@ class TfIfdExperiments:
         print('########################   BASELINE   #############################')
         print('###################################################################')
 
-        products, queries = self._prepare_data(data=data)
+        products, queries = self.prepare_data(data=data)
 
         # Building Products vector space
         product_vs = build_vector_space(data=products, vector_method=self.vector_method, vector_space=self.vector_space)
@@ -55,7 +57,7 @@ class TfIfdExperiments:
         self.evaluation.run(data=data,
                             data_to_evaluate=queries,
                             vector_space_to_search=product_vs,
-                            evaluate_column='search_term_processed')
+                            evaluate_column=VariablesConsts.SEARCH_TERM_PROCESSED)
 
         return product_vs, query_vs
 
@@ -65,7 +67,7 @@ class TfIfdExperiments:
         print('########################   CLICK GRAPH   ##########################')
         print('###################################################################')
 
-        products, queries = self._prepare_data(data=data)
+        products, queries = self.prepare_data(data=data)
 
         click_graph = ClickGraphModel(dimensions=len(self.model.vocabulary_),
                                       data=data)
@@ -86,7 +88,7 @@ class TfIfdExperiments:
         self.evaluation.run(data=data,
                             data_to_evaluate=queries,
                             vector_space_to_search=product_vs,
-                            evaluate_column='search_term_processed')
+                            evaluate_column=VariablesConsts.SEARCH_TERM_PROCESSED)
 
         # print('PRODUCTS ANALYSIS')
         #

@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 
 from src.click_graph.click_graph_model import ClickGraphModel
+from src.configs.variables_const import VariablesConsts
 from src.data.processing.build_vector_spaces import build_vector_space
 from src.evaluation.evaluation_method import EvaluationMethod
 
@@ -43,12 +44,12 @@ class Word2VecExperiments:
             # return np.array([vectors])
             raise ValueError('strategy must be either \'sum\' or \'average\'')
 
-    def _prepare_data(self, data):
+    def prepare_data(self, data):
 
-        product_title_vectors = data['product_title_processed'].apply(
+        product_title_vectors = data[VariablesConsts.PRODUCT_TITLE_PROCESSED].apply(
             lambda x: self._calculate_word_vectors(word_vectors=self.model,
                                                    list_of_words=x))
-        search_term_vectors = data['search_term_processed'].apply(
+        search_term_vectors = data[VariablesConsts.SEARCH_TERM_PROCESSED].apply(
             lambda x: self._calculate_word_vectors(word_vectors=self.model,
                                                    list_of_words=x))
 
@@ -56,11 +57,11 @@ class Word2VecExperiments:
         queries = dict()
 
         for i, row in data.iterrows():
-            if row['product_uid'] not in products:
-                products[row['product_uid']] = product_title_vectors[i]
+            if row[VariablesConsts.PRODUCT_ID] not in products:
+                products[row[VariablesConsts.PRODUCT_ID]] = product_title_vectors[i]
 
-            if row['search_term_processed'] not in queries:
-                queries[row['search_term_processed']] = search_term_vectors[i]
+            if row[VariablesConsts.SEARCH_TERM_PROCESSED] not in queries:
+                queries[row[VariablesConsts.SEARCH_TERM_PROCESSED]] = search_term_vectors[i]
 
         return products, queries
 
@@ -69,7 +70,7 @@ class Word2VecExperiments:
         print('########################   BASELINE   #############################')
         print('###################################################################')
 
-        products, queries = self._prepare_data(data=data)
+        products, queries = self.prepare_data(data=data)
 
         # Building Products vector space
         product_vs = build_vector_space(data=products, vector_method=self.vector_method, vector_space=self.vector_space)
@@ -80,7 +81,7 @@ class Word2VecExperiments:
         self.evaluation.run(data=data,
                             data_to_evaluate=queries,
                             vector_space_to_search=product_vs,
-                            evaluate_column='search_term_processed')
+                            evaluate_column=VariablesConsts.SEARCH_TERM_PROCESSED)
 
         return product_vs, query_vs
 
@@ -90,7 +91,7 @@ class Word2VecExperiments:
         print('########################   CLICK GRAPH   ##########################')
         print('###################################################################')
 
-        products, queries = self._prepare_data(data=data)
+        products, queries = self.prepare_data(data=data)
 
         click_graph = ClickGraphModel(dimensions=self.model.vector_size,
                                       data=data)
@@ -111,7 +112,7 @@ class Word2VecExperiments:
         self.evaluation.run(data=data,
                             data_to_evaluate=queries,
                             vector_space_to_search=product_vs,
-                            evaluate_column='search_term_processed')
+                            evaluate_column=VariablesConsts.SEARCH_TERM_PROCESSED)
 
         # print('PRODUCTS ANALYSIS')
         #

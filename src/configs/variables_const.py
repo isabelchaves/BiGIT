@@ -1,0 +1,12 @@
+class VariablesConsts:
+    PRODUCT_ID = 'product_id'
+    RELEVANCE = 'relevance'
+    DISTANCE = 'distance'
+    SEARCH_TERM = 'search_term'
+    # SEARCH_TERM = 'query'
+    SEARCH_TERM_PROCESSED = 'search_term_processed'
+    PRODUCT_TITLE = 'product_title'
+    PRODUCT_TITLE_PROCESSED = 'product_title_processed'
+    CLICK_SCORE = 'click_score'
+    # CLICK_SCORE = 'relevance'
+    CLICKS = 'clicks'
