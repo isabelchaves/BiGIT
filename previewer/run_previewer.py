@@ -1,8 +1,8 @@
 from flask import Flask, request, render_template
 
-from configs.models_const import ModelsConsts
+from src.configs.models_const import ModelsConsts
 
-app = Flask(__name__, template_folder='./previewer/templates')
+app = Flask(__name__, template_folder='./templates')
 
 
 @app.route('/', methods=['GET'])
