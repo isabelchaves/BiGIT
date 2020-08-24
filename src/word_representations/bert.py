@@ -1,7 +1,7 @@
-import numpy as np
+from time import time
+
 import pandas as pd
 import tensorflow as tf
-from tqdm import tqdm
 from transformers import BertTokenizer, TFBertModel
 
 from src.click_graph.click_graph_model import ClickGraphModel
@@ -21,51 +21,22 @@ class BertExperiments:
         self.word_vectors_strategy = word_vectors_strategy
         self.vector_method = vector_method
         self.vector_space = vector_space
-        self.tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
-        self.model = TFBertModel.from_pretrained('bert-large-uncased')
+        self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+        self.model = TFBertModel.from_pretrained('bert-base-uncased')
         self.evaluation = EvaluationMethod(product_ids=product_ids)
 
-    def tokenize(self, sentences):
-        input_ids, input_masks, input_segments = [], [], []
-        for sentence in tqdm(sentences):
-            inputs = self.tokenizer.encode_plus(sentence, add_special_tokens=True, max_length=128, pad_to_max_length=True,
-                                                return_attention_mask=True, return_token_type_ids=True)
-            input_ids.append(inputs['input_ids'])
-            input_masks.append(inputs['attention_mask'])
-            input_segments.append(inputs['token_type_ids'])
-
-        return np.asarray(input_ids, dtype='int32'), np.asarray(input_masks, dtype='int32'), np.asarray(input_segments,
-                                                                                                        dtype='int32')
-
-    def _tokenize(self, data: pd.Series):
-
-        tokenized = data.apply((lambda x: self.tokenizer.encode(x, add_special_tokens=True)))
-
-        max_len = 0
-        for i in tokenized.values:
-            if len(i) > max_len:
-                max_len = len(i)
-
-        padded = np.array([i + [0] * (max_len - len(i)) for i in tokenized.values])
-
-        attention_mask = np.where(padded != 0, 1, 0)
-
-        input_ids = tf.constant(padded)
-        attention_mask = tf.constant(attention_mask)
-
-        return input_ids, attention_mask
-
     def prepare_data(self, data):
+        start_time = time()
 
-        # input_ids, attention_mask = self._tokenize(data[VariablesConsts.PRODUCT_TITLE])
-        product_title_vectors = data[VariablesConsts.PRODUCT_TITLE].apply(
+        product_title_vectors = data[VariablesConsts.PRODUCT_TITLE_PROCESSED].apply(
             lambda x: self.model(tf.constant(self.tokenizer.encode(x))[None, :])[0][:, 0, :].numpy())
-        # product_title_vectors = last_hidden_states[0][:, 0, :].numpy()
 
-        search_term_vectors = data[VariablesConsts.SEARCH_TERM].apply(
-            lambda x: self.model(tf.constant(self.tokenizer.encode(x))[None, :])[1])
+        self.vector_size = len(product_title_vectors[0])
 
-        print('Done cenas')
+        search_term_vectors = data[VariablesConsts.SEARCH_TERM_PROCESSED].apply(
+            lambda x: self.model(tf.constant(self.tokenizer.encode(x))[None, :])[0][:, 0, :].numpy())
+
+        print(time() - start_time)
 
         products = dict()
         queries = dict()
@@ -107,7 +78,7 @@ class BertExperiments:
 
         products, queries = self.prepare_data(data=data)
 
-        click_graph = ClickGraphModel(dimensions=self.model.vector_size,
+        click_graph = ClickGraphModel(dimensions=self.vector_size,
                                       data=data)
 
         queries, products = click_graph.run(products=products,
