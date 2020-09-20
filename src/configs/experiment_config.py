@@ -1,6 +1,6 @@
 class ExperimentConfig:
-    # data_path = '/Users/isabel.chaves/Documents/MADSAD/MasterThesis/home-depot-product-search-relevance/'
-    data_path = '/Users/isabel.chaves/Documents/MADSAD/MasterThesis/CrowdFlowerDataset/'
+    data_path = '/home-depot-product-search-relevance/'
+    # data_path = '/CrowdFlowerDataset/'
     language = {'acronym': 'ENG',
                 'stemmer': 'english',
                 'nltk': 'english'}
@@ -10,3 +10,4 @@ class ExperimentConfig:
     vector_method = 'seq_search'
     word_vectors_strategy = 'sum'
     click_graph_interaction_number = 100
+    click_graph_initialization = 'document'
