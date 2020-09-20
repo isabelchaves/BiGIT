@@ -18,14 +18,14 @@ warnings.filterwarnings('ignore')
 
 class RunExperiment:
     def __init__(self, data_path: str, language: Dict, vector_space: str, vector_method: str,
-                 word_vectors_strategy: str, click_graph_interaction_number: int, click_graph_initialization: str):
+                 word_vectors_strategy: str, bigit_interaction_number: int, bigit_initialization: str):
         self.data_path = data_path
         self.language = language
         self.vector_space = vector_space
         self.vector_method = vector_method
         self.word_vectors_strategy = word_vectors_strategy
-        self.click_graph_interaction_number = click_graph_interaction_number
-        self.click_graph_initialization = click_graph_initialization
+        self.bigit_interaction_number = bigit_interaction_number
+        self.bigit_initialization = bigit_initialization
 
     def run(self):
         data = pd.read_parquet(self.data_path + 'train_set.parquet')
@@ -51,14 +51,14 @@ class RunExperiment:
                 search_terms_vector_space=tfidf_query_vs,
                 product_ids=deepcopy(product_ids)).run_predictions()
 
-        tfidf_clickgraph_product_vs, tfidf_clickgraph_query_vs = \
-            tfidf.run_with_click_graph(data=deepcopy(data),
-                                       click_graph_interaction_number=self.click_graph_interaction_number,
-                                       click_graph_initialization=self.click_graph_initialization)
+        tfidf_graph_product_vs, tfidf_graph_query_vs = \
+            tfidf.run_with_bigit(data=deepcopy(data),
+                                 bigit_interaction_number=self.bigit_interaction_number,
+                                 bigit_initialization=self.bigit_initialization)
 
         Predict(model_class=deepcopy(tfidf),
-                product_vector_space=tfidf_clickgraph_product_vs,
-                search_terms_vector_space=tfidf_clickgraph_query_vs,
+                product_vector_space=tfidf_graph_product_vs,
+                search_terms_vector_space=tfidf_graph_query_vs,
                 product_ids=deepcopy(product_ids)).run_predictions()
 
         # Word2vec #
@@ -73,14 +73,14 @@ class RunExperiment:
                 search_terms_vector_space=word2vec_queries_vs,
                 product_ids=deepcopy(product_ids)).run_predictions()
 
-        word2vec_clickgraph_product_vs, word2vec_clickgraph_queries_vs = \
-            word2vec.run_with_click_graph(data=deepcopy(data),
-                                          click_graph_interaction_number=self.click_graph_interaction_number,
-                                          click_graph_initialization=self.click_graph_initialization)
+        word2vec_graph_product_vs, word2vec_graph_queries_vs = \
+            word2vec.run_with_bigit(data=deepcopy(data),
+                                    bigit_interaction_number=self.bigit_interaction_number,
+                                    bigit_initialization=self.bigit_initialization)
 
         Predict(model_class=deepcopy(word2vec),
-                product_vector_space=word2vec_clickgraph_product_vs,
-                search_terms_vector_space=word2vec_clickgraph_queries_vs,
+                product_vector_space=word2vec_graph_product_vs,
+                search_terms_vector_space=word2vec_graph_queries_vs,
                 product_ids=deepcopy(product_ids)).run_predictions()
 
         # BERT #
@@ -95,24 +95,14 @@ class RunExperiment:
                 search_terms_vector_space=bert_queries_vs,
                 product_ids=deepcopy(product_ids)).run_predictions()
 
-        bert_clickgraph_product_vs, bert_clickgraph_queries_vs = \
-            bert.run_with_click_graph(data=deepcopy(data),
-                                      click_graph_interaction_number=self.click_graph_interaction_number,
-                                      click_graph_initialization='query')
+        bert_graph_product_vs, bert_graph_queries_vs = \
+            bert.run_with_bigit(data=deepcopy(data),
+                                bigit_interaction_number=self.bigit_interaction_number,
+                                bigit_initialization=self.bigit_initialization)
 
         Predict(model_class=deepcopy(bert),
-                product_vector_space=bert_clickgraph_product_vs,
-                search_terms_vector_space=bert_clickgraph_queries_vs,
-                product_ids=deepcopy(product_ids)).run_predictions()
-
-        bert_clickgraph_product_vs, bert_clickgraph_queries_vs = \
-            bert.run_with_click_graph(data=deepcopy(data),
-                                      click_graph_interaction_number=self.click_graph_interaction_number,
-                                      click_graph_initialization='document')
-
-        Predict(model_class=deepcopy(bert),
-                product_vector_space=bert_clickgraph_product_vs,
-                search_terms_vector_space=bert_clickgraph_queries_vs,
+                product_vector_space=bert_graph_product_vs,
+                search_terms_vector_space=bert_graph_queries_vs,
                 product_ids=deepcopy(product_ids)).run_predictions()
 
         print(data.head())
@@ -125,5 +115,5 @@ if __name__ == '__main__':
                   vector_space=experiment_config.vector_space,
                   vector_method=experiment_config.vector_method,
                   word_vectors_strategy=experiment_config.word_vectors_strategy,
-                  click_graph_interaction_number=experiment_config.click_graph_interaction_number,
-                  click_graph_initialization=experiment_config.click_graph_initialization).run()
+                  bigit_interaction_number=experiment_config.bigit_interaction_number,
+                  bigit_initialization=experiment_config.bigit_initialization).run()

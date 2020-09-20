@@ -6,7 +6,7 @@ from tqdm import tqdm
 from src.configs.variables_const import VariablesConsts
 
 
-class ClickGraphModel:
+class BiGIT:
     def __init__(self, dimensions: int, data: pd.DataFrame):
         self.dimensions = dimensions
         self.G = self._create_graph(data=data)

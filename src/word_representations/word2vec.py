@@ -2,10 +2,10 @@ import gensim.downloader as api
 import numpy as np
 import pandas as pd
 
-from src.click_graph.click_graph_model import ClickGraphModel
 from src.configs.variables_const import VariablesConsts
 from src.data.processing.build_vector_spaces import build_vector_space
 from src.evaluation.evaluation_method import EvaluationMethod
+from src.graph_model.BiGIT import BiGIT
 
 
 class Word2VecExperiments:
@@ -85,7 +85,7 @@ class Word2VecExperiments:
 
         return product_vs, query_vs
 
-    def run_with_click_graph(self, data: pd.DataFrame, click_graph_interaction_number: int, click_graph_initialization: str):
+    def run_with_bigit(self, data: pd.DataFrame, bigit_interaction_number: int, bigit_initialization: str):
 
         print('###################################################################')
         print('########################   CLICK GRAPH   ##########################')
@@ -93,13 +93,13 @@ class Word2VecExperiments:
 
         products, queries = self.prepare_data(data=data)
 
-        click_graph = ClickGraphModel(dimensions=self.model.vector_size,
-                                      data=data)
+        bigit = BiGIT(dimensions=self.model.vector_size,
+                      data=data)
 
-        queries, products = click_graph.run(products=products,
-                                            queries=queries,
-                                            iterations_nr=click_graph_interaction_number,
-                                            start=click_graph_initialization)
+        queries, products = bigit.run(products=products,
+                                      queries=queries,
+                                      iterations_nr=bigit_interaction_number,
+                                      start=bigit_initialization)
 
         # Building Products vector space
         product_vs = build_vector_space(data=products, vector_method=self.vector_method, vector_space=self.vector_space)

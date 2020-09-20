@@ -9,5 +9,5 @@ class ExperimentConfig:
     # Brute force method (seq_search) -> Fast indexing, but slow for querying
     vector_method = 'seq_search'
     word_vectors_strategy = 'sum'
-    click_graph_interaction_number = 100
-    click_graph_initialization = 'document'
+    bigit_interaction_number = 100
+    bigit_initialization = 'document'
