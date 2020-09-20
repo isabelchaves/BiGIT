@@ -64,7 +64,7 @@ class TfIfdExperiments:
     def run_with_bigit(self, data: pd.DataFrame, bigit_interaction_number: int, bigit_initialization: str):
 
         print('###################################################################')
-        print('########################   CLICK GRAPH   ##########################')
+        print('##########################    BiGIT    ############################')
         print('###################################################################')
 
         products, queries = self.prepare_data(data=data)
