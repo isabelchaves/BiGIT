@@ -8,5 +8,4 @@ class VariablesConsts:
     PRODUCT_TITLE = 'product_title'
     PRODUCT_TITLE_PROCESSED = 'product_title_processed'
     CLICK_SCORE = 'click_score'
-    # CLICK_SCORE = 'relevance'
     CLICKS = 'clicks'
