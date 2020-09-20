@@ -70,7 +70,7 @@ class BertExperiments:
 
         return product_vs, query_vs
 
-    def run_with_click_graph(self, data: pd.DataFrame, click_graph_interaction_number: int):
+    def run_with_click_graph(self, data: pd.DataFrame, click_graph_interaction_number: int, click_graph_initialization: str):
 
         print('###################################################################')
         print('########################   CLICK GRAPH   ##########################')
@@ -84,7 +84,7 @@ class BertExperiments:
         queries, products = click_graph.run(products=products,
                                             queries=queries,
                                             iterations_nr=click_graph_interaction_number,
-                                            start='document')
+                                            start=click_graph_initialization)
 
         # Building Products vector space
         product_vs = build_vector_space(data=products, vector_method=self.vector_method, vector_space=self.vector_space)
