@@ -1,4 +1,4 @@
-To run the previewer on Unix, Linux, macOS, go to the previewer directory and run the following commands:
+BiGIT - Bipartite Graph Information Transfer
+-----
 
-$ export FLASK_APP=run_previewer <br>
-$ flask run
+WIP
