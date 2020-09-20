@@ -46,12 +46,14 @@ class EvaluationMethod:
             rr_list.append(metrics.rr)
             ndcg_list.append(metrics.ndcg)
 
-        precison = sum(precision_list) / len(precision_list)
-        recall = sum(recall_list) / len(recall_list)
-        f1 = 2 * precison * recall / (precison + recall)
-        map = sum(ap_list) / len(ap_list)
-        mrr = sum(rr_list) / len(rr_list)
-        mndcg = sum(ndcg_list) / len(ndcg_list)
+        number_of_queries = evaluate[evaluate_column].nunique()
+
+        precison = sum(precision_list) / number_of_queries
+        recall = sum(recall_list) / number_of_queries
+        f1 = 2 * precison * recall / (precison + recall) if recall != 0 or precison != 0 else 0
+        map = sum(ap_list) / number_of_queries
+        mrr = sum(rr_list) / number_of_queries
+        mndcg = sum(ndcg_list) / number_of_queries
 
         print('Metrics: F1 : %0.4f, MAP : %0.4f, MRR : %0.4f, NDCG : %0.4f' % (
             round(f1, 4), round(map, 4), round(mrr, 4), round(mndcg, 4)))
